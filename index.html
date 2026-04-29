@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CYMC Battle Arena</title>
+  <style>
+    :root{--bg:#07030d;--panel:#09090fcc;--purple:#9f3dff;--lime:#9bff44;--text:#f2edff}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--text);background:#000}
+    .app{min-height:100vh;position:relative;overflow:hidden;background:radial-gradient(circle at center,#7d21ff66,transparent 35%),radial-gradient(circle at 70% 40%,#ff730a38,transparent 35%),linear-gradient(180deg,#050008,#050505)}
+    .layout{display:grid;grid-template-columns:240px 1fr 260px;gap:16px;padding:16px}
+    .panel{background:var(--panel);border:1px solid #ffffff22;border-radius:12px}
+    .left .brand{font-size:54px;line-height:1;font-weight:900;color:#ffcc3c}.left .subtitle{font-size:34px;font-style:italic;font-weight:900}
+    .menu button{width:100%;background:#0009;color:#ddd;border:1px solid #ffffff1a;border-radius:6px;padding:10px;margin:4px 0;text-align:left;font-weight:800}
+    .menu button.active{background:#7d21ffbb;color:#fff;border-color:#bb88ff}
+    .stats{padding:14px}.stats h4,.season{color:#b98cff;font-style:italic}
+    .middle{position:relative}
+    .topbar,.title{text-align:center}.title h1{margin:0;color:#c064ff;font-size:52px}.title h2{margin:0;font-size:32px}
+    .battle{display:grid;grid-template-columns:1fr 120px 1fr;gap:18px;align-items:center;padding:18px 8px;margin-top:18px}
+    .monster{height:420px;border-radius:14px;border:2px solid #000;position:relative;padding:14px;background:#040404;box-shadow:0 0 30px #000}
+    .monster.purple{border-color:#a453ff;background:linear-gradient(180deg,#2b0b3f,#060606)}
+    .monster.lime{border-color:#78f742;background:linear-gradient(180deg,#203d0e,#060606)}
+    .monster h3{margin:0;display:flex;justify-content:space-between;font-size:28px}
+    .emoji{height:280px;display:grid;place-items:center;font-size:120px}
+    .vs{font-size:98px;font-weight:900;color:#c57cff;text-align:center;animation:pulse 1.8s infinite}
+    @keyframes pulse{50%{transform:scale(1.15)}}
+    .energy{display:flex;justify-content:center;gap:10px;align-items:center;padding:8px;margin:6px auto;max-width:max-content;background:#000c;border:1px solid #a65eff77;border-radius:10px}
+    .gem{width:18px;height:18px;background:#3a244e;border:1px solid #ffffff2a;transform:rotate(45deg)}.gem.on{background:#b55bff;box-shadow:0 0 8px #b55bff}
+    .btn{background:#6715bb;border:1px solid #b57aff;color:#fff;padding:8px 14px;border-radius:8px;font-weight:800;cursor:pointer}
+    .deck{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding-bottom:8px}
+    .card{width:160px;height:210px;padding:8px;border-radius:10px;border:2px solid #333;background:#111;cursor:pointer}
+    .card.sel{outline:3px solid #c36dff}.card h5{margin:0;font-size:14px}.small{font-size:12px;color:#ffd67a}
+    .right .panel{padding:14px;margin-bottom:12px}.log{max-height:380px;overflow:auto}.log p{margin:6px 0;border-bottom:1px solid #ffffff18;padding-bottom:6px}
+    .footer{position:fixed;left:0;right:0;bottom:0;height:58px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;background:#000d;border-top:1px solid #ffffff1f}
+    @media (max-width:1200px){.layout{grid-template-columns:1fr}.right,.left{order:2}.middle{order:1}.footer{position:static}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="layout">
+      <aside class="left">
+        <div class="brand">CYMC</div><div class="subtitle">BATTLE ARENA</div>
+        <div class="panel menu" id="menu"></div>
+        <div class="panel stats"><h4>YOUR STATS</h4><div>WINS 128</div><div>LOSSES 34</div><div>RANK #247</div><div>ELO 1,842</div><h4 class="season">SEASON 1</h4><div>ENDS IN 12D 14H 32M</div></div>
+      </aside>
+      <main class="middle">
+        <div class="title"><h1>RANKED BATTLE</h1><h2>SEASON 1</h2></div>
+        <section class="battle">
+          <article class="monster purple"><h3><span>7. VOIDKING CYMC</span><span>HP 190</span></h3><div class="emoji">👁️</div></article>
+          <div class="vs">VS</div>
+          <article class="monster lime"><h3><span>3. TOXICSLIME CYMC</span><span>HP 160</span></h3><div class="emoji">🧪</div></article>
+        </section>
+        <div class="energy"><strong id="turn">TURN 3/50</strong><span id="gems"></span><button class="btn" id="endTurn">END TURN</button></div>
+        <section class="deck" id="deck"></section>
+      </main>
+      <aside class="right">
+        <div class="panel"><h3>BATTLE INFO</h3><p>MODE: RANKED 1v1</p><p>TIME LEFT: 18</p><p id="turnSide">TURN: 3/50</p></div>
+        <div class="panel"><h3>BATTLE LOG</h3><div class="log" id="log"></div></div>
+      </aside>
+    </div>
+    <footer class="footer"><div><strong style="color:#ffcb40">CYMC</strong> THE FIGHT. THE FLEX. THE FUTURE.</div><button class="btn">CREATE MATCH</button></footer>
+  </div>
+<script>
+const menu=['BATTLE','MY MONSTERS','COLLECTION','MARKETPLACE','LEADERBOARD','MISSIONS','SHOP','STAKING','PROFILE','SETTINGS'];
+const monsters=[{id:1,name:'BONERAGE CYMC',hp:140,moves:['Bone Smash','Skeletal Roar']},{id:2,name:'FLAMEDRIP CYMC',hp:150,moves:['Melt Down','Fire Blast']},{id:7,name:'VOIDKING CYMC',hp:190,moves:['Void Crush','Dark Eclipse']},{id:4,name:'CYBERCLAW CYMC',hp:160,moves:['Electro Slash','System Overload']},{id:6,name:'GOLDGRILL BEAST',hp:170,moves:['Rich Bite','Diamond Flex']}];
+let turn=3,energy=6,selected=7;
+const log=[['Turn 1','CYMCLEGEND','Void Crush'],['','DARKHUNTER','Toxic Splash'],['Turn 2','CYMCLEGEND','Dark Eclipse'],['','DARKHUNTER','Slime Shield']];
+const menuEl=document.getElementById('menu');
+menu.forEach((m,i)=>{const b=document.createElement('button');b.textContent=m;if(i===0)b.className='active';menuEl.appendChild(b);});
+function renderGems(){const el=document.getElementById('gems');el.innerHTML='';for(let i=0;i<10;i++){const g=document.createElement('i');g.className='gem'+(i<energy?' on':'');el.appendChild(g);}}
+function renderDeck(){const d=document.getElementById('deck');d.innerHTML='';monsters.forEach(m=>{const c=document.createElement('div');c.className='card'+(m.id===selected?' sel':'');c.innerHTML=`<h5>${m.id}. ${m.name}</h5><div class="small">HP ${m.hp}</div><div style="font-size:44px;text-align:center;padding-top:20px">☠</div><div class="small">${m.moves.join('<br>')}</div>`;c.onclick=()=>{selected=m.id;renderDeck()};d.appendChild(c);});}
+function renderLog(){const l=document.getElementById('log');l.innerHTML=log.map(x=>`<p>${x[0]?'<b>'+x[0]+'</b><br>':''}<span style="color:#b87bff">${x[1]}</span><br>${x[2]}</p>`).join('');}
+function renderTurn(){document.getElementById('turn').textContent=`TURN ${turn}/50`;document.getElementById('turnSide').textContent=`TURN: ${turn}/50`;}
+document.getElementById('endTurn').onclick=()=>{turn=Math.min(50,turn+1);energy=Math.min(10,energy+1);const me=monsters.find(m=>m.id===selected);const enemy=['Toxic Splash','Corrode','Slime Shield'][Math.floor(Math.random()*3)];log.unshift([`Turn ${turn-1}`,'CYMCLEGEND',me.moves[0]],['','DARKHUNTER',enemy]);while(log.length>12)log.pop();renderTurn();renderGems();renderLog();};
+renderTurn();renderGems();renderDeck();renderLog();
+</script>
+</body></html>
